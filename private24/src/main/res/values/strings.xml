@@ -3,4 +3,6 @@
     <string name="currency_rates">Курси валют</string>
     <string name="currency_rates_placeholder">Тут відображатимуться курси валют</string>
     <string name="load_currency_rates">Завантажити Курси Валют</string>
+    <string name="currency_rates_loading">Завантаження…</string>
+    <string name="currency_rates_load_error">Не вдалося завантажити курси валют. Спробуйте ще раз.</string>
 </resources>
