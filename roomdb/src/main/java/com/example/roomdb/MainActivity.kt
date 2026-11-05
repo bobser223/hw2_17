@@ -22,7 +22,15 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.Icon
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,8 +45,10 @@ import androidx.compose.ui.unit.dp
 import com.example.roomdb.ui.theme.ComposeTheme
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 data class CardData(
+    val id: String = UUID.randomUUID().toString(),
     val title: String = "Заголовок картки",
     val description: String = "Це дуже детальний опис для цієї картки, який з'являється після того, як ви натиснете кнопку розгортання. Тут може бути багато тексту та іншої корисної інформації.",
     val creationTime: String = "2023-10-27 15:30"
@@ -66,6 +76,9 @@ class MainActivity : ComponentActivity() {
                                     creationTime = currentTime
                                 )
                             )
+                        },
+                        onRemoveCard = { card ->
+                            cards.remove(card)
                         }
                     )
                 }
@@ -78,13 +91,18 @@ class MainActivity : ComponentActivity() {
 fun CardsContainer(
     modifier: Modifier = Modifier,
     cardsList: List<CardData>,
-    onAddCard: () -> Unit = {}
+    onAddCard: () -> Unit = {},
+    onRemoveCard: (CardData) -> Unit = {}
 ) {
     val listState = rememberLazyListState()
+    var previousCardCount by remember { mutableStateOf(0) }
 
     LaunchedEffect(cardsList.size) {
-        if (cardsList.isNotEmpty()) {
-            listState.animateScrollToItem(cardsList.size - 1)
+        val cardCount = cardsList.size
+        val cardAdded = cardCount > previousCardCount
+        previousCardCount = cardCount
+        if (cardAdded) {
+            listState.animateScrollToItem(cardCount - 1)
         }
     }
 
@@ -97,8 +115,50 @@ fun CardsContainer(
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            items(cardsList) { card ->
-                ExpandableCard(cardData = card)
+            items(
+                items = cardsList,
+                key = { card -> card.id }
+            ) { card ->
+
+                val dismissState = rememberSwipeToDismissBoxState(
+                    positionalThreshold = { it * 0.9f },
+                )
+
+                SwipeToDismissBox(
+                    state = dismissState,
+                    // onDismiss чекає settledValue: завершення жесту й анімації.
+                    onDismiss = { onRemoveCard(card) },
+                    backgroundContent = {
+                        val color = when (dismissState.targetValue) {
+                            SwipeToDismissBoxValue.Settled -> Color.Transparent
+                            else -> MaterialTheme.colorScheme.errorContainer
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp) // такий самий padding як у Card
+                                .background(color, shape = MaterialTheme.shapes.medium)
+                                .padding(horizontal = 20.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete",
+                                tint = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete",
+                                tint = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    },
+                    modifier = Modifier.animateItem() // Додає плавну анімацію при видаленні
+                ) {
+                    ExpandableCard(cardData = card)
+                }
             }
         }
         Button(
