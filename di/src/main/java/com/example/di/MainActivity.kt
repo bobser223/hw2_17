@@ -12,19 +12,28 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.example.di.computer.Computer
 import com.example.di.ui.theme.ComposeTheme
 
 class MainActivity : ComponentActivity() {
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+
+       val computer = Computer()
+
         setContent {
             ComposeTheme {
                 Box(
                     modifier = Modifier.fillMaxSize().safeDrawingPadding(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Button(onClick = {}) {
+                    Button(onClick = {
+                        computer.boot()
+                    }) {
                         Text(stringResource(R.string.button_label))
                     }
                 }
